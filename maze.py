@@ -27,6 +27,16 @@ class UnionFind:
             return True
         return False
 
+def init_labyrinth(width, height):
+    global tresor_x, tresor_y  # Déclarer les variables comme globales
+    maze = kruskal_labyrinth(width, height)
+    traps = add_traps(maze)
+    for trap in traps:
+        maze[trap[0]][trap[1]] = 4
+    maze, tresor_x, tresor_y = add_tresor(maze, tresor_x, tresor_y)
+    maze[0][0] = 3
+    return maze, traps, tresor_x, tresor_y
+
 def kruskal_labyrinth(width, height):
     # Créer un labyrinthe initialisé avec des murs (1)
     labyrinth = [[1] * width for _ in range(height)]
@@ -54,6 +64,15 @@ def kruskal_labyrinth(width, height):
 
     return labyrinth  # Retourner le labyrinthe généré
 
+def add_traps(labyrinth):
+    traps = []
+    for y in range(len(labyrinth)):
+        for x in range(len(labyrinth[0])):
+            if labyrinth[y][x] == 0:
+                if random.random() < 0.1:
+                    traps.append((y, x))               
+    return traps
+
 def add_tresor(labyrinth,tresor_x,tresor_y):
     max_attempts = 100  # Nombre maximum de tentatives pour placer le trésor
     attempts = 0
@@ -78,7 +97,7 @@ def add_tresor(labyrinth,tresor_x,tresor_y):
                 borders += 1
             
             # Si la cellule a 3 murs, placer le trésor
-            if borders == 3:
+            if borders == 3 and x != 0 and y != 0:
                 labyrinth[y][x] = 2  # Placer le trésor
                 tresor_x, tresor_y = x, y
                 break  # Sortir de la boucle après avoir placé le trésor
@@ -86,23 +105,20 @@ def add_tresor(labyrinth,tresor_x,tresor_y):
 
     return labyrinth,tresor_x,tresor_y
 
-# Générer un labyrinthe de 16 de large et 10 de haut
-maze = kruskal_labyrinth(16, 10)
-maze,tresor_x,tresor_y = add_tresor(maze,tresor_x,tresor_y)
-maze[0][0] = 3
-
 # Afficher le labyrinthe
-def display_maze(maze):
+def display_maze(maze, traps):
     plt.imshow(maze, cmap='gray_r')
     plt.scatter(0, 0, color='red', s=100)
     plt.scatter(tresor_x, tresor_y, color='green', s=100)
+    for trap in traps:
+        plt.scatter(trap[1], trap[0], color='blue', s=100)
     plt.show(block=False)
     plt.pause(0.5)
     plt.clf()
 
 moves = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
-
+maze,traps,tresor_x,tresor_y = init_labyrinth(16, 10)
 for _ in range(100):
     dx, dy = random.choice(moves)
     new_x, new_y = agent_x + dx, agent_y + dy
@@ -111,6 +127,6 @@ for _ in range(100):
         maze[agent_y][agent_x] = 0
         agent_x, agent_y = new_x, new_y
         maze[agent_y][agent_x] = 3
-    display_maze(maze)
+    display_maze(maze,traps)
 
 plt.show()
